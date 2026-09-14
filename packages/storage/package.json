@@ -1,0 +1,26 @@
+{
+  "name": "@comic-canvas/storage",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts",
+    "./safe-fetch-attestation": {
+      "types": "./types/safe-fetch-attestation.d.ts",
+      "development": "./src/safe-fetch-attestation.ts",
+      "default": "./dist/safe-fetch-attestation.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/config": "workspace:*",
+    "@aws-sdk/client-s3": "3.864.0",
+    "@aws-sdk/s3-request-presigner": "3.864.0"
+  }
+}

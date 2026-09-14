@@ -1,0 +1,26 @@
+{
+  "name": "@comic-canvas/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "migrate": "node dist/migrate.js",
+    "test:migration": "vitest run --config vitest.migration.config.ts"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/config": "workspace:*",
+    "drizzle-orm": "0.44.5",
+    "pg": "8.16.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.5"
+  }
+}

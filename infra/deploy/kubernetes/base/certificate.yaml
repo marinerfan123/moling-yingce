@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata: { name: comic-canvas-tls }
+spec:
+  secretName: comic-canvas-tls
+  renewBefore: 720h
+  issuerRef: { name: comic-canvas-issuer, kind: ClusterIssuer }
+  dnsNames: ["app.example.com"]

@@ -1,0 +1,38 @@
+{
+  "name": "@comic-canvas/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/db": "workspace:*",
+    "@comic-canvas/queue": "workspace:*",
+    "@comic-canvas/storage": "workspace:*",
+    "@comic-canvas/config": "workspace:*",
+    "@comic-canvas/observability": "workspace:*",
+    "@nestjs/common": "11.1.6",
+    "@nestjs/core": "11.1.6",
+    "@nestjs/platform-fastify": "11.1.6",
+    "@nestjs/swagger": "11.2.0",
+    "fastify": "5.5.0",
+    "jose": "6.1.0",
+    "reflect-metadata": "0.2.2",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@comic-canvas/test-kit": "workspace:*",
+    "@nestjs/testing": "11.1.6",
+    "@types/supertest": "6.0.3",
+    "supertest": "7.1.4"
+  }
+}

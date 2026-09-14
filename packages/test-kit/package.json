@@ -1,0 +1,31 @@
+{
+  "name": "@comic-canvas/test-kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/canvas-core": "workspace:*",
+    "@comic-canvas/canvas-collab-yjs": "workspace:*",
+    "@comic-canvas/db": "workspace:*",
+    "@comic-canvas/provider-sdk": "workspace:*",
+    "@comic-canvas/queue": "workspace:*",
+    "@comic-canvas/storage": "workspace:*",
+    "fast-check": "4.2.0",
+    "pg": "8.16.3",
+    "testcontainers": "11.5.1",
+    "yjs": "13.6.27"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.5"
+  }
+}

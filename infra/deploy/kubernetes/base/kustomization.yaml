@@ -1,0 +1,16 @@
+resources:
+  - config.yaml
+  - web.yaml
+  - api.yaml
+  - collab.yaml
+  - dispatcher.yaml
+  - worker-generation.yaml
+  - worker-media.yaml
+  - migrator-job.yaml
+  - gateway.yaml
+  - gateway-policies.yaml
+  - certificate.yaml
+  - internal-tls.yaml
+  - controlled-egress-gateway.yaml
+  - safe-fetch-egress-proxy.yaml
+  - network-policies.yaml

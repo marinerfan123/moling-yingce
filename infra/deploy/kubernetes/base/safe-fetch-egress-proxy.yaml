@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: safe-fetch-proxy }
+spec:
+  selector: { matchLabels: { app: safe-fetch-proxy } }
+  template:
+    metadata: { labels: { app: safe-fetch-proxy } }
+    spec:
+      containers:
+        - name: safe-fetch-proxy
+          image: registry.example/infra/safe-fetch-proxy@sha256:safefetch
+          env:
+            - { name: REVALIDATE_REDIRECTS, value: "true" }
+            - { name: CONNECT_EXACT_VALIDATED_IP, value: "true" }
+            - { name: PRESERVE_TLS_SNI, value: "true" }
+          securityContext: { runAsNonRoot: true, readOnlyRootFilesystem: true, allowPrivilegeEscalation: false }

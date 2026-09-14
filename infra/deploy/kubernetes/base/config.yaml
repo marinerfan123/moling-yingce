@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comic-canvas-runtime
+data:
+  BETA_ACCESS_MODE: allowlist
+  TRUSTED_PROXY_CIDRS: 10.0.0.0/8
+  TRUSTED_PROXY_HOPS: "1"
+  CONTROLLED_EGRESS_ENDPOINT: https://controlled-egress.internal
+  SAFE_FETCH_PROXY_ENDPOINT: https://safe-fetch-proxy.internal

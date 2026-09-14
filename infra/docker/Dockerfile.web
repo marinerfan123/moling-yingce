@@ -1,0 +1,7 @@
+FROM node:24.6.0-alpine AS runtime
+LABEL org.opencontainers.image.source="comic-canvas" org.opencontainers.image.revision="${RELEASE_SHA}"
+WORKDIR /app
+ENV NODE_ENV=production COMIC_CANVAS_BOOT=web
+COPY apps/web/dist ./apps/web/dist
+USER 10001:10001
+ENTRYPOINT ["node", "apps/web/dist/main.js"]

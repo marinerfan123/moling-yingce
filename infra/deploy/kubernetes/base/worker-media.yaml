@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: worker-media }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: worker-media } }
+  template:
+    metadata: { labels: { app: worker-media } }
+    spec:
+      serviceAccountName: worker-media
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: worker-media
+          image: registry.example/comic/worker-media@sha256:REPLACED_BY_RENDERER
+          env: [{ name: APP_PROCESS_ROLE, value: worker-media }, { name: FFMPEG_VERSION, value: 7.1.1 }]
+          securityContext: { readOnlyRootFilesystem: true, allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] } }
+          livenessProbe: { exec: { command: ["node", "packages/config/dist/loopback-health-probe.js", "3105"] } }
+          resources: { requests: { cpu: "1", memory: 1Gi }, limits: { cpu: "4", memory: 8Gi } }

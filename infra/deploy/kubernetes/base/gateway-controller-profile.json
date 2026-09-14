@@ -1,0 +1,7 @@
+{
+  "controllerName": "gateway.networking.k8s.io/comic-canvas-managed",
+  "controllerDigest": "sha256:gateway-controller-frozen-by-adr-0006",
+  "kubernetes": "1.36",
+  "websocket": { "path": "/collab", "keepaliveSeconds": 20, "idleTimeoutSeconds": 120 },
+  "sse": { "path": "/v1/projects/*/events", "heartbeatSeconds": 15, "streamTimeoutMinutes": 15, "buffering": false }
+}

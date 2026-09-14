@@ -1,0 +1,22 @@
+{
+  "name": "@comic-canvas/provider-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/storage": "workspace:*",
+    "@comic-canvas/config": "workspace:*",
+    "@aws-sdk/client-kms": "3.864.0",
+    "zod": "4.1.1"
+  }
+}

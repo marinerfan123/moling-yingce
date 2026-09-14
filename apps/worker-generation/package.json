@@ -1,0 +1,30 @@
+{
+  "name": "@comic-canvas/worker-generation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:staging": "vitest run --config vitest.staging.config.ts"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/db": "workspace:*",
+    "@comic-canvas/provider-sdk": "workspace:*",
+    "@comic-canvas/queue": "workspace:*",
+    "@comic-canvas/storage": "workspace:*",
+    "@comic-canvas/config": "workspace:*",
+    "@comic-canvas/observability": "workspace:*",
+    "bullmq": "5.58.2",
+    "ioredis": "5.7.0"
+  },
+  "devDependencies": {
+    "@comic-canvas/test-kit": "workspace:*"
+  }
+}

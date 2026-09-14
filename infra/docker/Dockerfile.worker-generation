@@ -1,0 +1,8 @@
+FROM node:24.6.0-alpine AS runtime
+LABEL org.opencontainers.image.source="comic-canvas" org.opencontainers.image.revision="${RELEASE_SHA}"
+WORKDIR /app
+ENV NODE_ENV=production COMIC_CANVAS_BOOT=worker-generation APP_PROCESS_ROLE=worker-generation HEALTH_PORT=3104
+COPY apps/worker-generation/dist ./apps/worker-generation/dist
+COPY packages ./packages
+USER 10004:10004
+ENTRYPOINT ["node", "apps/worker-generation/dist/main.js"]

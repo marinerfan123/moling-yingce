@@ -1,0 +1,8 @@
+FROM node:24.6.0-alpine AS runtime
+LABEL org.opencontainers.image.source="comic-canvas" org.opencontainers.image.revision="${RELEASE_SHA}"
+WORKDIR /app
+ENV NODE_ENV=production COMIC_CANVAS_BOOT=worker-media APP_PROCESS_ROLE=worker-media HEALTH_PORT=3105 FFMPEG_VERSION=7.1.1 CLAMAV_DEFINITIONS=signed-test-snapshot
+COPY apps/worker-media/dist ./apps/worker-media/dist
+COPY packages ./packages
+USER 10005:10005
+ENTRYPOINT ["node", "apps/worker-media/dist/main.js"]

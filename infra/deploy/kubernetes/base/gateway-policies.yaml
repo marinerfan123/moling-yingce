@@ -1,0 +1,12 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata: { name: web-route, annotations: { comic-canvas.io/sse-buffering: "disabled", comic-canvas.io/websocket-keepalive: "20s" } }
+spec:
+  parentRefs: [{ name: comic-canvas-gateway }]
+  rules:
+    - matches: [{ path: { type: PathPrefix, value: / } }]
+      backendRefs: [{ name: web, port: 3000 }]
+    - matches: [{ path: { type: PathPrefix, value: /v1 } }]
+      backendRefs: [{ name: api, port: 3001 }]
+    - matches: [{ path: { type: PathPrefix, value: /collab } }]
+      backendRefs: [{ name: collab, port: 3002 }]

@@ -1,0 +1,12 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: controlled-egress }
+spec:
+  selector: { matchLabels: { app: controlled-egress } }
+  template:
+    metadata: { labels: { app: controlled-egress } }
+    spec:
+      containers:
+        - name: controlled-egress
+          image: registry.example/infra/controlled-egress@sha256:gateway
+          securityContext: { runAsNonRoot: true, readOnlyRootFilesystem: true, allowPrivilegeEscalation: false }

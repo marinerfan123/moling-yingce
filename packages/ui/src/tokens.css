@@ -1,0 +1,13 @@
+:root {
+  --cc-color-bg: #0f1117;
+  --cc-color-surface: #171a23;
+  --cc-color-panel: #1f2430;
+  --cc-color-text: #f4f6fb;
+  --cc-color-muted: #aab2c5;
+  --cc-color-accent: #8b5cf6;
+  --cc-radius-sm: 6px;
+  --cc-radius-md: 8px;
+  --cc-top-bar: 52px;
+  --cc-tool-rail: 52px;
+  --cc-focus: 0 0 0 2px #c4b5fd;
+}

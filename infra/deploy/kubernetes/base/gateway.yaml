@@ -1,0 +1,15 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata: { name: comic-canvas-managed }
+spec: { controllerName: gateway.networking.k8s.io/comic-canvas-managed }
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata: { name: comic-canvas-gateway }
+spec:
+  gatewayClassName: comic-canvas-managed
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls: { certificateRefs: [{ name: comic-canvas-tls }] }

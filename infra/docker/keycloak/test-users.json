@@ -1,0 +1,9 @@
+{
+  "users": [
+    { "username": "owner@example.test", "roles": ["Owner"] },
+    { "username": "editor@example.test", "roles": ["Editor"] },
+    { "username": "generator@example.test", "roles": ["Generator"] },
+    { "username": "commenter@example.test", "roles": ["Commenter"] },
+    { "username": "viewer@example.test", "roles": ["Viewer"] }
+  ]
+}

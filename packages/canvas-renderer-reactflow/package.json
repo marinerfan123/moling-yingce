@@ -1,0 +1,29 @@
+{
+  "name": "@comic-canvas/canvas-renderer-reactflow",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/canvas-core": "workspace:*",
+    "@comic-canvas/ui": "workspace:*",
+    "@xyflow/react": "12.8.4",
+    "react": "19.1.1"
+  },
+  "devDependencies": {
+    "@comic-canvas/test-kit": "workspace:*",
+    "@testing-library/jest-dom": "6.8.0",
+    "@testing-library/react": "16.3.0",
+    "@testing-library/user-event": "14.6.1",
+    "jsdom": "26.1.0"
+  }
+}

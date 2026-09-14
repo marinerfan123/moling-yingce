@@ -1,0 +1,7 @@
+{
+  "applicationsHaveNoDirectInternet": true,
+  "onlyMediaCanReachSafeFetch": true,
+  "providerCallsViaControlledEgress": ["api", "worker-generation"],
+  "dispatcherCredentials": ["DATABASE_URL_DISPATCHER", "REDIS_URL"],
+  "forbiddenDispatcherCredentials": ["GENERATION_SUBMIT_KMS_KEY_ID", "WEBHOOK_VERIFICATION_KMS_KEY_ID", "API_COLLAB_SESSION_PRIVATE_JWK_FILE"]
+}

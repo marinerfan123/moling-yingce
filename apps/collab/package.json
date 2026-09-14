@@ -1,0 +1,29 @@
+{
+  "name": "@comic-canvas/collab",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/canvas-collab-yjs": "workspace:*",
+    "@comic-canvas/db": "workspace:*",
+    "@comic-canvas/queue": "workspace:*",
+    "@comic-canvas/config": "workspace:*",
+    "@comic-canvas/observability": "workspace:*",
+    "@hocuspocus/server": "3.2.3",
+    "jose": "6.1.0",
+    "yjs": "13.6.27"
+  },
+  "devDependencies": {
+    "@comic-canvas/test-kit": "workspace:*"
+  }
+}

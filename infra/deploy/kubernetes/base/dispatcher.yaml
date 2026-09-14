@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: dispatcher }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: dispatcher } }
+  template:
+    metadata: { labels: { app: dispatcher } }
+    spec:
+      serviceAccountName: dispatcher
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: dispatcher
+          image: registry.example/comic/worker-generation@sha256:REPLACED_BY_RENDERER
+          command: ["node", "apps/worker-generation/dist/dispatcher-main.js"]
+          env: [{ name: APP_PROCESS_ROLE, value: dispatcher }]
+          securityContext: { readOnlyRootFilesystem: true, allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] } }
+          livenessProbe: { exec: { command: ["node", "packages/config/dist/loopback-health-probe.js", "3103"] } }
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }

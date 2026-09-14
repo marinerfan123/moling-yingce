@@ -1,0 +1,38 @@
+{
+  "name": "comic-canvas",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "format:check": "prettier --check package.json pnpm-workspace.yaml turbo.json tsconfig.base.json eslint.config.mjs prettier.config.mjs vitest.workspace.ts vitest.integration.ts playwright.config.ts .dependency-cruiser.cjs apps packages scripts",
+    "lint": "eslint .",
+    "test": "pnpm -r --if-present test",
+    "test:integration": "vitest run --config vitest.integration.ts",
+    "test:e2e": "playwright test",
+    "verify:workspaces": "node scripts/verify-workspaces.mjs",
+    "verify:fixed-points": "node scripts/verify-fixed-points.mjs",
+    "verify:boundaries": "depcruise --config .dependency-cruiser.cjs apps packages",
+    "images:build": "node scripts/build-images.mjs",
+    "images:verify": "node scripts/verify-images.mjs",
+    "deploy:render": "node scripts/render-deployment.mjs",
+    "deploy:verify": "node scripts/render-deployment.mjs --environment staging --out test-results/deploy/rendered"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
+    "@playwright/test": "1.55.0",
+    "@types/node": "24.3.0",
+    "@types/react": "19.1.10",
+    "@types/react-dom": "19.1.7",
+    "cross-env": "10.0.0",
+    "dependency-cruiser": "16.10.4",
+    "eslint": "9.34.0",
+    "prettier": "3.6.2",
+    "turbo": "2.5.6",
+    "typescript": "5.9.2",
+    "vite": "7.1.3",
+    "vitest": "3.2.4"
+  }
+}

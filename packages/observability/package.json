@@ -1,0 +1,23 @@
+{
+  "name": "@comic-canvas/observability",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@comic-canvas/config": "workspace:*",
+    "@opentelemetry/api": "1.9.0",
+    "pino": "9.9.0"
+  },
+  "devDependencies": {
+    "@comic-canvas/test-kit": "workspace:*"
+  }
+}

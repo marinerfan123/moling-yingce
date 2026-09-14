@@ -1,0 +1,7 @@
+{
+  "clients": [
+    { "clientId": "comic-web", "publicClient": true, "standardFlowEnabled": true, "attributes": { "pkce.code.challenge.method": "S256" } },
+    { "clientId": "comic-api", "bearerOnly": true },
+    { "clientId": "comic-collab", "bearerOnly": true }
+  ]
+}

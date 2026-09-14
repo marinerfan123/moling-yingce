@@ -1,0 +1,3 @@
+{
+  "allowlist": ["owner@example.test", "editor@example.test", "generator@example.test"]
+}

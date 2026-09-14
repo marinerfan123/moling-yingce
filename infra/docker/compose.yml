@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16
+    profiles: ["deps", "test", "release"]
+    ports: ["127.0.0.1:5432:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data", "./postgres/init-roles.sql:/docker-entrypoint-initdb.d/init-roles.sql:ro"]
+    environment:
+      POSTGRES_DB: comic_canvas
+      POSTGRES_USER: comic_migrator
+      POSTGRES_PASSWORD: local-only
+  redis:
+    image: redis:7
+    profiles: ["deps", "test", "release"]
+    ports: ["127.0.0.1:6379:6379"]
+    volumes: ["redis-data:/data"]
+  minio:
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    profiles: ["deps", "test", "release"]
+    command: ["server", "/data", "--console-address", ":9001"]
+    ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+    volumes: ["minio-data:/data"]
+    environment:
+      MINIO_ROOT_USER: local-minio
+      MINIO_ROOT_PASSWORD: local-minio-password
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    profiles: ["deps", "test", "release"]
+    command: ["start-dev", "--import-realm"]
+    ports: ["127.0.0.1:8080:8080"]
+    volumes: ["./keycloak/realm.json:/opt/keycloak/data/import/realm.json:ro"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: local-only
+  mailpit:
+    image: axllent/mailpit:v1.27
+    profiles: ["deps", "test"]
+    ports: ["127.0.0.1:8025:8025"]
+  web:
+    build: { context: ../.., dockerfile: infra/docker/Dockerfile.web }
+    profiles: ["app", "test", "release"]
+    read_only: true
+  api:
+    build: { context: ../.., dockerfile: infra/docker/Dockerfile.api }
+    profiles: ["app", "test", "release"]
+    environment: { APP_PROCESS_ROLE: api }
+    read_only: true
+  collab:
+    build: { context: ../.., dockerfile: infra/docker/Dockerfile.collab }
+    profiles: ["app", "test", "release"]
+    environment: { APP_PROCESS_ROLE: collab }
+    read_only: true
+  dispatcher:
+    build: { context: ../.., dockerfile: infra/docker/Dockerfile.worker-generation }
+    profiles: ["app", "test", "release"]
+    command: ["node", "apps/worker-generation/dist/dispatcher-main.js"]
+    environment: { APP_PROCESS_ROLE: dispatcher }
+    read_only: true
+  worker-generation:
+    build: { context: ../.., dockerfile: infra/docker/Dockerfile.worker-generation }
+    profiles: ["app", "test", "release"]
+    environment: { APP_PROCESS_ROLE: worker-generation }
+    read_only: true
+  worker-media:
+    build: { context: ../.., dockerfile: infra/docker/Dockerfile.worker-media }
+    profiles: ["app", "test", "release"]
+    environment: { APP_PROCESS_ROLE: worker-media }
+    read_only: true
+volumes:
+  postgres-data: {}
+  redis-data: {}
+  minio-data: {}

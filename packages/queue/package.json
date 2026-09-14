@@ -1,0 +1,22 @@
+{
+  "name": "@comic-canvas/queue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@comic-canvas/contracts": "workspace:*",
+    "@comic-canvas/db": "workspace:*",
+    "@comic-canvas/config": "workspace:*",
+    "bullmq": "5.58.2",
+    "ioredis": "5.7.0"
+  }
+}

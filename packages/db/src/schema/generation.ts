@@ -1,0 +1,25 @@
+export const generationSchema = Object.freeze({
+  tables: [
+    "generation_jobs",
+    "generation_attempts",
+    "generation_work_bindings",
+    "generation_attempt_evidence",
+    "generation_absence_evidence_consumptions",
+    "cancellation_operations",
+    "provider_webhook_receipts",
+    "provider_events",
+  ],
+  functions: [
+    "create_generation_attempt_work",
+    "get_generation_attempt",
+    "get_generation_attempt_by_submission_key",
+    "transition_generation_attempt",
+    "begin_generation_cancellation",
+    "complete_generation_cancellation",
+    "create_replacement_generation_attempt",
+    "record_verified_provider_receipt",
+    "bootstrap_verified_provider_event",
+  ],
+  jobStates: ["pending", "queued", "dispatching", "running", "reconciling", "succeeded", "failed", "canceled"] as const,
+  cancellationStates: ["none", "requested", "acknowledged", "unsupported", "unknown"] as const,
+});

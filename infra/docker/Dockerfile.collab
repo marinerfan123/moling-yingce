@@ -1,0 +1,8 @@
+FROM node:24.6.0-alpine AS runtime
+LABEL org.opencontainers.image.source="comic-canvas" org.opencontainers.image.revision="${RELEASE_SHA}"
+WORKDIR /app
+ENV NODE_ENV=production COMIC_CANVAS_BOOT=collab APP_PROCESS_ROLE=collab HEALTH_PORT=3102
+COPY apps/collab/dist ./apps/collab/dist
+COPY packages ./packages
+USER 10003:10003
+ENTRYPOINT ["node", "apps/collab/dist/main.js"]

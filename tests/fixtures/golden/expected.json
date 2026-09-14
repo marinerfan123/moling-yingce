@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "projects": [
+    {
+      "id": "golden-episode-script",
+      "expectedOutputs": ["script.json", "scene-graph.json"],
+      "video": { "width": 1080, "height": 1920, "fps": 25, "audio": false },
+      "normalizedStreamHash": "ca0fa79c6b67fc23e7377b35139be5ba84d17f6857959216301030af980208dd"
+    },
+    {
+      "id": "golden-storyboard",
+      "expectedOutputs": ["storyboard.json", "frames.json"],
+      "video": { "width": 1080, "height": 1920, "fps": 25, "audio": false },
+      "normalizedStreamHash": "e04f73efcd9c7c4bb69801216fbb0004ae69944def92e94eefa51bd1a13b1375"
+    },
+    {
+      "id": "golden-timeline-export",
+      "expectedOutputs": ["timeline.json", "qc.json"],
+      "video": { "width": 1080, "height": 1920, "fps": 25, "audio": true },
+      "normalizedStreamHash": "3a64f259458e84c3303156be685cf8c98c9ba2ce55cad7840cd23150fa2e0c77"
+    }
+  ]
+}

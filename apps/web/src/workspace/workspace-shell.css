@@ -1,0 +1,24 @@
+.workspace-shell {
+  display: grid;
+  grid-template-areas:
+    "top top top"
+    "rail left main";
+  grid-template-columns: 52px minmax(0, auto) 1fr;
+  grid-template-rows: 52px 1fr;
+  min-height: 100vh;
+  background: #0f1117;
+  color: #f4f6fb;
+}
+
+.workspace-shell__top {
+  grid-area: top;
+}
+
+.workspace-shell__rail {
+  grid-area: rail;
+}
+
+.workspace-shell__main {
+  grid-area: main;
+  overflow: hidden;
+}

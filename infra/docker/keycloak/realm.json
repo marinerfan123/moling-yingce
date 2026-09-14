@@ -1,0 +1,13 @@
+{
+  "realm": "comic-canvas-test",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      { "name": "Owner" },
+      { "name": "Editor" },
+      { "name": "Generator" },
+      { "name": "Commenter" },
+      { "name": "Viewer" }
+    ]
+  }
+}

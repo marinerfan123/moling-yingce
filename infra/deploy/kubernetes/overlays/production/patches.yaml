@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: comic-canvas-runtime
+  annotations: { comic-canvas.dev/collab-owner-routing-check: required }
+data:
+  BETA_ACCESS_MODE: off

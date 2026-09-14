@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata: { name: migrator }
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: migrator
+      containers:
+        - name: migrator
+          image: registry.example/comic/api@sha256:REPLACED_BY_RENDERER
+          command: ["node", "packages/db/dist/migrate.js"]
+          env: [{ name: APP_PROCESS_ROLE, value: migrator }]
+          securityContext: { readOnlyRootFilesystem: true, allowPrivilegeEscalation: false, runAsNonRoot: true, capabilities: { drop: ["ALL"] } }

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collab
+  annotations:
+    comic-canvas.dev/owner-coordination: "redis-discovery-postgres-room-epoch"
+    comic-canvas.dev/websocket-keepalive-ms: "20000"
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: collab } }
+  template:
+    metadata: { labels: { app: collab } }
+    spec:
+      serviceAccountName: collab
+      securityContext: { runAsNonRoot: true, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: collab
+          image: registry.example/comic/collab@sha256:REPLACED_BY_RENDERER
+          env:
+            - { name: APP_PROCESS_ROLE, value: collab }
+            - { name: COLLAB_OWNER_COORDINATION, value: postgres-room-epoch }
+            - { name: COLLAB_WEBSOCKET_KEEPALIVE_MS, value: "20000" }
+          securityContext:
+            { readOnlyRootFilesystem: true, allowPrivilegeEscalation: false, capabilities: { drop: ["ALL"] } }
+          ports: [{ containerPort: 3002 }, { containerPort: 3102 }]
+          readinessProbe: { httpGet: { path: /health, port: 3102, host: 127.0.0.1 } }
+          resources: { requests: { cpu: 250m, memory: 256Mi }, limits: { cpu: "1", memory: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: collab }
+spec: { selector: { app: collab }, ports: [{ name: ws, port: 3002, targetPort: 3002 }] }

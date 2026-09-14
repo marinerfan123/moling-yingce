@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+    "noImplicitOverride": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@comic-canvas/contracts": ["packages/contracts/src/index.ts"],
+      "@comic-canvas/canvas-core": ["packages/canvas-core/src/index.ts"],
+      "@comic-canvas/canvas-renderer-reactflow": ["packages/canvas-renderer-reactflow/src/index.ts"],
+      "@comic-canvas/canvas-collab-yjs": ["packages/canvas-collab-yjs/src/index.ts"],
+      "@comic-canvas/db": ["packages/db/src/index.ts"],
+      "@comic-canvas/provider-sdk": ["packages/provider-sdk/src/index.ts"],
+      "@comic-canvas/queue": ["packages/queue/src/index.ts"],
+      "@comic-canvas/storage": ["packages/storage/src/index.ts"],
+      "@comic-canvas/observability": ["packages/observability/src/index.ts"],
+      "@comic-canvas/ui": ["packages/ui/src/index.ts"],
+      "@comic-canvas/config": ["packages/config/src/index.ts"],
+      "@comic-canvas/test-kit": ["packages/test-kit/src/index.ts"]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny }
+spec: { podSelector: {}, policyTypes: ["Ingress", "Egress"] }
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: app-egress-via-controlled-gateway }
+spec:
+  podSelector: { matchExpressions: [{ key: app, operator: In, values: ["api", "worker-generation"] }] }
+  policyTypes: ["Egress"]
+  egress: [{ to: [{ podSelector: { matchLabels: { app: controlled-egress } } }] }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: media-egress-via-safe-fetch }
+spec:
+  podSelector: { matchLabels: { app: worker-media } }
+  policyTypes: ["Egress"]
+  egress: [{ to: [{ podSelector: { matchLabels: { app: safe-fetch-proxy } } }] }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: collab-owner-rpc-internal-only
+  annotations: { comic-canvas.dev/collab-owner-rpc: mtls-only }
+spec:
+  podSelector: { matchLabels: { app: collab } }
+  policyTypes: ["Ingress"]
+  ingress:
+    [{ from: [{ podSelector: { matchLabels: { app: collab } } }, { podSelector: { matchLabels: { app: api } } }] }]

@@ -1,0 +1,10 @@
+{
+  "records": [
+    {
+      "id": "rights-test-original-001",
+      "scope": "test-only",
+      "status": "cleared",
+      "evidence": "author-created fixture text and generated primitive media"
+    }
+  ]
+}

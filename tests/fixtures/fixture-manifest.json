@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "generated": [
+    {
+      "path": "tests/fixtures/generated/tone-1s.wav",
+      "mime": "audio/wav",
+      "bytes": 29,
+      "durationSeconds": 1,
+      "sha256": "e6a381cb28736f6fe2ee5c3287332af8a53c10521c4f88f15f7933aab88be818",
+      "rightsEvidenceId": "rights-test-original-001"
+    },
+    {
+      "path": "tests/fixtures/generated/clip-1s-25fps.mp4",
+      "mime": "video/mp4",
+      "bytes": 35,
+      "durationSeconds": 1,
+      "fps": 25,
+      "sha256": "b8c04ee84853498d1f0719f72f20ed9b59382a59345c3bd87422702e3db3a1ee",
+      "rightsEvidenceId": "rights-test-original-001"
+    },
+    {
+      "path": "tests/fixtures/generated/frame-1080x1920.png",
+      "mime": "image/png",
+      "bytes": 27,
+      "width": 1080,
+      "height": 1920,
+      "sha256": "68403b493cb11a34d48f256e4b8fcbceb566020bff08dce99f0864425ebf9026",
+      "rightsEvidenceId": "rights-test-original-001"
+    },
+    {
+      "path": "tests/fixtures/generated/caption.srt",
+      "mime": "application/x-subrip",
+      "bytes": 45,
+      "durationSeconds": 1,
+      "sha256": "8052b66b675dcc1c345daec24d7600aef943a31c9c694dab254b944b84f2ecc7",
+      "rightsEvidenceId": "rights-test-original-001"
+    }
+  ]
+}
