@@ -1,0 +1,82 @@
+---
+title: HTTP API 合同
+description: 信封、错误码与 OpenAPI
+---
+
+# HTTP API 合同
+
+路径前缀是 `/api`。前后端一起发布，不按 `/api/v1`、`/api/v2` 做路径版本。不兼容变更随版本一起改接口和调用方。
+
+机器可读规范：运行中的 `GET /api/openapi.yaml`，源文件 `backend/internal/handler/openapi.yaml`。前端 TypeScript 仍走 `web/src/services/api` 的 `http`，不从 OpenAPI 生成客户端。
+
+## 注册与手机验证
+
+`GET /api/auth/settings` 返回公开注册能力。首个账号不需要验证码；已有账号时，`emailCodeRequired` 与 `phoneCodeRequired` 分别跟随管理员的邮箱验证和手机验证开关。对应开关为 `true` 时，注册必须提交相应的邮箱/手机号及验证码；两个开关都为 `false` 时，不需要提交验证码即可注册。`phoneVerificationAvailable` 表示短信服务是否已完整配置；手机开关已打开但该字段为 `false` 时，前台应停止注册提交。
+
+`POST /api/auth/phone-code` 接收 `{ "phone": "13800138000" }`，向规范化后的中国大陆手机号发送 6 位注册验证码。验证码有效期 10 分钟，同一手机号发送间隔至少 60 秒；验证码只保存哈希并在注册成功时一次性消费，连续输错 5 次后必须重新获取验证码。
+
+管理员短信配置支持阿里云短信和标准 HTTP JSON 网关。标准网关请求体为 `{ "phone": "13800138000", "code": "123456", "signName": "墨灵AI", "templateCode": "register-code" }`，成功响应可为空，或返回 `{ "success": true }`、`{ "ok": true }`、`{ "code": 0 }`（也接受 `200`、`OK`、`SUCCESS`、`00000`）；明确失败的业务响应会被视为发送失败。
+
+`POST /api/auth/register` 在原有字段之外接受 `phone` 与 `phoneCode`。管理员可在 `GET/PATCH /api/admin/settings/sms` 配置 `aliyun`（阿里云短信 RPC）或 `standard`（标准 HTTP JSON）发送器；AccessKey Secret 和 API Key 只返回已配置标记，不返回明文。标准网关收到的 JSON 为 `{ "phone", "code", "signName", "templateCode" }`，API Key（如填写）通过 `Authorization: Bearer ...` 发送。启用短信验证但配置不完整时，服务端拒绝发送和注册，不降级为无验证注册。
+
+## 微信与抖音登录
+
+`GET /api/auth/settings` 的 `wechatEnabled` 与 `douyinEnabled` 表示对应登录入口是否开放。用户访问 `/api/auth/wechat/start?next=/create` 或 `/api/auth/douyin/start?next=/create` 后，服务端会创建一次性、按提供商隔离的 OAuth 状态并重定向到开放平台；授权完成后，开放平台应回调本站的 `/oauth/wechat/callback` 或 `/oauth/douyin/callback`。`next` 只接受站内路径，默认回到 `/create`。
+
+管理员通过 `GET/PATCH /api/admin/settings/wechat` 与 `GET/PATCH /api/admin/settings/douyin` 配置登录模块。微信字段使用 `clientId`（开放平台 App ID）与 `clientSecret`（App Secret）；抖音字段使用 `clientId`（Client Key）与 `clientSecret`（Client Secret）。两者还接受 `authorizationUrl`、`tokenUrl`、`userInfoUrl`、`redirectUrl` 和 `scopes`。启用时三个上游地址必须是 HTTPS，回调地址必须是 HTTPS（本地回环地址可用 HTTP）；密钥只加密保存在服务端，读取响应仅返回 `hasClientSecret`。
+
+首次通过微信或抖音登录且没有已绑定身份时，只有在管理员开放注册的情况下才会创建本地账号；相同提供商的稳定用户 ID 会复用已有账号，不会按第三方邮箱自动合并本地账号。
+
+## 管理员支付订单
+
+`GET /api/admin/payments/orders` 需要管理员权限，支持 `status`、`keyword`、`page`、`pageSize`。关键词匹配订单号、渠道交易号、用户名称、用户名或邮箱，也支持完整用户 ID 精确匹配。用户名和邮箱搜索忽略大小写；状态过滤同时生效，返回匹配总数和当前页订单。
+
+每条管理员列表订单在原有字段之外包含 `user: { id, username, displayName, email }`，由当前页用户 ID 批量读取；用户不存在时返回 `user: null`，保留原 `userId` 与历史订单。此身份摘要仅用于管理员订单列表，不添加到普通用户支付接口或支付状态同步响应。
+
+后台支付订单列表展示用户身份，点击名称打开用户详情；订单详情提供完整订单号、渠道交易号、用户 ID 和各阶段时间。同步支付状态与关闭订单位于更多菜单，关闭订单仍需确认。
+
+## 信封
+
+成功：
+
+```json
+{ "code": 0, "data": {}, "msg": "ok" }
+```
+
+失败：HTTP status 与 `code` 都不是成功；`reason` 是稳定机器可读原因。
+
+```json
+{
+  "code": 40301,
+  "data": null,
+  "msg": "账号素材数量已达到 100 个上限",
+  "reason": "quota_exceeded"
+}
+```
+
+`code === 0` 才是业务成功。HTTP 200 但 `code !== 0` 必须当失败。前端判断类型用 `ApiError.reason` / `ApiError.code`，不要解析 `msg`。
+
+## 错误码
+
+`code` 默认等于 HTTP 状态。需要区分同一状态的不同原因时，使用 `status * 100 + n`。没有单独的 1001/2001 号段，以免和 HTTP 状态、现有 42901 以及重试判断打架。
+
+| code  | HTTP | reason             | 含义                         |
+| ----- | ---- | ------------------ | ---------------------------- |
+| 0     | 200  | —                  | 成功                         |
+| 400   | 400  | `invalid_argument` | 请求不合法                   |
+| 401   | 401  | `unauthorized`     | 未登录                       |
+| 403   | 403  | `forbidden`        | 无权限                       |
+| 404   | 404  | `not_found`        | 资源不存在                   |
+| 409   | 409  | `conflict`         | 冲突                         |
+| 429   | 429  | `rate_limited`     | 限流（未细分）               |
+| 500   | 500  | `internal`         | 内部错误                     |
+| 502   | 502  | `bad_gateway`      | 上游失败                     |
+| 503   | 503  | `unavailable`      | 暂时不可用                   |
+| 504   | 504  | `timeout`          | 超时                         |
+| 40301 | 403  | `quota_exceeded`   | 账号配额用尽（不自动重试）   |
+| 40901 | 409  | `conflict`         | 幂等冲突                     |
+| 42901 | 429  | `rate_limited`     | 请求限流（可带 Retry-After） |
+
+模型错误把已有字符串码放进 `reason`（如 `model_capability_not_supported`），`code` 仍为 400。
+
+常量：后端 `service/error_codes.go`，前端 `web/src/services/api/error-codes.ts`。

@@ -1,0 +1,577 @@
+openapi: 3.0.3
+info:
+  title: 影策 HTTP API
+  version: "1.0.0"
+  description: |
+    路径前缀是 `/api`。前后端一起发布，不按路径做 API 版本。
+
+    业务 JSON 信封为 `{ code, data, msg, reason }`。`code === 0` 表示成功；失败时 HTTP status 与
+    `code` 都表达失败。`code` 默认等于 HTTP 状态；同一状态下的细分原因使用 `status*100+n`
+    （例如 40301 配额、42901 限流）。机器判断请用 `reason`，不要解析 `msg`。
+
+    TypeScript 调用面仍是 `web/src/services/api` 的 `http` 模块，不从本规范生成客户端。
+servers:
+  - url: /api
+security:
+  - sessionCookie: []
+tags:
+  - name: meta
+  - name: auth
+  - name: projects
+  - name: resources
+  - name: tasks
+  - name: assets
+paths:
+  /openapi.yaml:
+    get:
+      tags: [meta]
+      security: []
+      summary: 本 OpenAPI 文档
+      responses:
+        "200":
+          description: OpenAPI 3.0 YAML
+          content:
+            application/yaml:
+              schema:
+                type: string
+  /auth/session:
+    get:
+      tags: [auth]
+      summary: 当前登录会话
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/login:
+    post:
+      tags: [auth]
+      security: []
+      summary: 登录并设置会话 Cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/settings:
+    get:
+      tags: [auth]
+      security: []
+      summary: 公开注册与验证能力
+      responses:
+        "200":
+          $ref: "#/components/responses/AuthSettings"
+  /auth/wechat/start:
+    get:
+      tags: [auth]
+      security: []
+      summary: 开始微信 OAuth 登录
+      description: 创建一次性、按提供商隔离的 OAuth 状态，并重定向到已配置的微信开放平台地址。
+      parameters:
+        - in: query
+          name: next
+          schema: { type: string }
+          description: 登录成功后的站内路径，非法或缺省时回到 /create
+      responses:
+        "302":
+          description: 重定向到微信开放平台
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /auth/douyin/start:
+    get:
+      tags: [auth]
+      security: []
+      summary: 开始抖音 OAuth 登录
+      description: 创建一次性、按提供商隔离的 OAuth 状态，并重定向到已配置的抖音开放平台地址。
+      parameters:
+        - in: query
+          name: next
+          schema: { type: string }
+          description: 登录成功后的站内路径，非法或缺省时回到 /create
+      responses:
+        "302":
+          description: 重定向到抖音开放平台
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /auth/phone-code:
+    post:
+      tags: [auth]
+      security: []
+      summary: 发送注册手机验证码
+      description: 未注册手机号返回统一成功结果；同一手机号至少间隔 60 秒。启用手机验证前，普通注册必须先完成此步骤。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone]
+              properties:
+                phone: { type: string, description: 中国大陆手机号 }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /auth/email-code:
+    post:
+      tags: [auth]
+      security: []
+      summary: 发送注册邮箱验证码
+      description: 未注册邮箱返回统一成功结果；同一邮箱受发送间隔和限流策略约束。启用邮箱验证前，普通注册必须先完成此步骤。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /auth/register:
+    post:
+      tags: [auth]
+      security: []
+      summary: 注册本地账号
+      description: 首个账号只需用户名和密码；已有账号时邮箱始终用于账号注册，但仅在 emailCodeRequired 为 true（管理员开启邮箱验证）时需要邮箱验证码；仅在 phoneCodeRequired 为 true（管理员开启手机验证）时需要中国大陆手机号及对应手机验证码。两个验证开关都关闭时无需提交验证码。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                email: { type: string, description: 已有账号时必填；用于账号注册 }
+                emailCode:
+                  {
+                    type: string,
+                    description: emailCodeRequired 为 true 时必填，邮箱验证码有效期与发送策略见邮件接口,
+                  }
+                phone:
+                  {
+                    type: string,
+                    description: 开启手机验证时必填，中国大陆手机号,
+                  }
+                phoneCode:
+                  {
+                    type: string,
+                    description: phoneCodeRequired 为 true 时必填，6 位手机验证码,
+                  }
+                displayName: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "429":
+          $ref: "#/components/responses/Error"
+  /admin/settings/sms:
+    get:
+      tags: [auth]
+      summary: 读取管理员短信验证配置
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [auth]
+      summary: 更新管理员短信验证配置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                provider: { type: string, enum: [aliyun, standard] }
+                accessKeyId: { type: string }
+                accessKeySecret: { type: string, writeOnly: true }
+                signName: { type: string }
+                templateCode: { type: string }
+                endpoint: { type: string, format: uri }
+                apiKey: { type: string, writeOnly: true }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /admin/settings/registration:
+    get:
+      tags: [auth]
+      summary: 读取管理员注册开关
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [auth]
+      summary: 更新管理员注册开关
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties:
+                enabled: { type: boolean }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /admin/settings/email:
+    get:
+      tags: [auth]
+      summary: 读取管理员邮件验证配置
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [auth]
+      summary: 更新管理员邮件验证配置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                host: { type: string }
+                port: { type: integer, format: int32 }
+                username: { type: string }
+                password: { type: string, writeOnly: true }
+                encryption: { type: string, enum: [starttls, tls, none] }
+                fromEmail: { type: string, format: email }
+                fromName: { type: string }
+                registrationAllowedDomains:
+                  type: array
+                  items: { type: string }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /admin/settings/wechat:
+    get:
+      tags: [auth]
+      summary: 读取管理员微信登录配置
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [auth]
+      summary: 更新管理员微信登录配置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                clientId: { type: string, description: 微信开放平台 App ID }
+                clientSecret: { type: string, writeOnly: true }
+                authorizationUrl: { type: string, format: uri }
+                tokenUrl: { type: string, format: uri }
+                userInfoUrl: { type: string, format: uri }
+                redirectUrl: { type: string, format: uri }
+                scopes: { type: array, items: { type: string } }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /admin/settings/douyin:
+    get:
+      tags: [auth]
+      summary: 读取管理员抖音登录配置
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags: [auth]
+      summary: 更新管理员抖音登录配置
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                clientId: { type: string, description: 抖音开放平台 Client Key }
+                clientSecret: { type: string, writeOnly: true }
+                authorizationUrl: { type: string, format: uri }
+                tokenUrl: { type: string, format: uri }
+                userInfoUrl: { type: string, format: uri }
+                redirectUrl: { type: string, format: uri }
+                scopes: { type: array, items: { type: string } }
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+  /projects:
+    get:
+      tags: [projects]
+      summary: 短剧项目列表
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      tags: [projects]
+      summary: 创建短剧项目
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+  /resources:
+    get:
+      tags: [resources]
+      summary: 当前用户资源列表
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+    post:
+      tags: [resources]
+      summary: 上传资源文件
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "403":
+          description: 配额用尽（code=40301, reason=quota_exceeded）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /resources/{id}/file:
+    get:
+      tags: [resources]
+      summary: 读取资源二进制（非 JSON 信封）
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: 文件流
+        "401":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /tasks:
+    post:
+      tags: [tasks]
+      summary: 创建生成任务
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+        "400":
+          $ref: "#/components/responses/Error"
+  /tasks/{id}/text-events:
+    get:
+      tags: [tasks]
+      summary: 文本任务 SSE
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: after
+          schema: { type: integer }
+          description: 递增事件游标，不要用任务 ID
+      responses:
+        "200":
+          description: text/event-stream
+  /assets:
+    get:
+      tags: [assets]
+      summary: 用户素材库
+      responses:
+        "200":
+          $ref: "#/components/responses/Envelope"
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: open_ai_canvas_session
+  schemas:
+    Envelope:
+      type: object
+      required: [code, msg]
+      properties:
+        code:
+          type: integer
+          description: 0 成功；失败时默认等于 HTTP 状态，或 status*100+n 的细分码
+        data: {}
+        msg:
+          type: string
+        reason:
+          type: string
+          description: 仅失败时出现。稳定机器可读原因。
+    AuthSettings:
+      description: 公开注册与验证能力
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [firstUser, registrationEnabled, emailEnabled, emailCodeRequired, phoneVerificationEnabled, phoneVerificationAvailable, phoneCodeRequired]
+              properties:
+                firstUser: { type: boolean }
+                registrationEnabled: { type: boolean }
+                linuxdoEnabled: { type: boolean }
+                wechatEnabled: { type: boolean }
+                douyinEnabled: { type: boolean }
+                emailEnabled: { type: boolean }
+                emailCodeRequired: { type: boolean }
+                phoneVerificationEnabled: { type: boolean }
+                phoneVerificationAvailable: { type: boolean }
+                phoneCodeRequired: { type: boolean }
+    ErrorEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/Envelope"
+        - type: object
+          properties:
+            code:
+              type: integer
+              enum:
+                [
+                  400,
+                  401,
+                  403,
+                  404,
+                  409,
+                  429,
+                  500,
+                  502,
+                  503,
+                  504,
+                  40301,
+                  40901,
+                  42901,
+                ]
+            data:
+              nullable: true
+            reason:
+              type: string
+              enum:
+                - invalid_argument
+                - unauthorized
+                - forbidden
+                - not_found
+                - conflict
+                - failed_precondition
+                - quota_exceeded
+                - rate_limited
+                - unavailable
+                - timeout
+                - internal
+                - bad_gateway
+                - model_capability_not_supported
+                - model_price_not_configured
+                - model_route_unavailable
+                - provider_request_failed
+                - model_catalog_mismatch
+                - invalid_model_selection
+  responses:
+    AuthSettings:
+      description: 公开注册与验证能力成功信封
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AuthSettings"
+    Envelope:
+      description: 业务成功信封
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Envelope"
+    Error:
+      description: 业务失败信封
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
