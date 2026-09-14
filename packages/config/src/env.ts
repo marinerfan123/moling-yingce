@@ -33,6 +33,8 @@ const envSchema = z
     S3_ENDPOINT: urlSchema,
     S3_BUCKET: z.string().min(1).default("comic-canvas-dev"),
     OIDC_ISSUER: urlSchema,
+    OIDC_AUDIENCE: z.string().min(1).default("comic-api"),
+    OIDC_JWKS_URL: urlSchema.optional(),
     PUBLIC_BASE_URL: urlSchema.default("http://localhost:3000"),
     INTERNAL_SERVICE_IDENTITY: z.string().min(1).default("local-dev"),
     TRUSTED_PROXY_CIDRS: z.string().min(1).default("127.0.0.1/32"),

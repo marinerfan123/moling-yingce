@@ -1,3 +1,7 @@
+import type { WebAuthState } from "../auth/auth-session.js";
+
+export const loginRoute = "/login";
+
 export const appRoutes = Object.freeze([
   "/",
   "/governance",
@@ -12,3 +16,7 @@ export const appRoutes = Object.freeze([
   "/projects/:projectId/episodes/:episodeId/assets/upload",
   "/projects/:projectId/episodes/:episodeId/generation/confirm",
 ] as const);
+
+export function routesForAuth(auth: WebAuthState): readonly string[] {
+  return auth.status === "authenticated" ? appRoutes : [loginRoute];
+}
