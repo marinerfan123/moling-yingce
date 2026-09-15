@@ -300,7 +300,7 @@ func (s *Service) SaveAdminChannelModel(actor *model.User, channelID string, id 
 	if err != nil {
 		return nil, err
 	}
-	modelKey, providerModelKey, capability, protocol, err := s.normalizeChannelModelContract(channel, req)
+	modelKey, providerModelKey, capability, protocol, err := normalizeChannelModelContractForSave(channel, req, id == "", s.protocolRegistry())
 	if err != nil {
 		return nil, err
 	}
@@ -793,6 +793,25 @@ func imageTestDefaults(profile *ImageCapabilityConfig) (string, string) {
 
 func normalizeChannelModelContract(channel *model.ModelChannel, req ChannelModelRequest) (string, string, string, model.ChannelInterfaceType, error) {
 	return normalizeChannelModelContractWithRegistry(protocol.Builtins(), channel, req)
+}
+
+// Unconfigured models are created by catalog imports and stay disabled until an
+// administrator assigns a capability and request protocol.
+func normalizeChannelModelContractForSave(channel *model.ModelChannel, req ChannelModelRequest, allowUnconfigured bool, registry *protocol.Registry) (string, string, string, model.ChannelInterfaceType, error) {
+	capability := normalizeCapability(req.Capability)
+	protocolID := strings.TrimSpace(req.Protocol)
+	if allowUnconfigured && capability == "" && protocolID == "" && req.Enabled != nil && !*req.Enabled {
+		modelKey := strings.TrimPrefix(strings.TrimSpace(req.ModelKey), "models/")
+		if modelKey == "" {
+			return "", "", "", "", BadAuthRequest("请填写模型标识")
+		}
+		providerModelKey := strings.TrimPrefix(strings.TrimSpace(req.ProviderModelKey), "models/")
+		if providerModelKey == "" {
+			providerModelKey = modelKey
+		}
+		return modelKey, providerModelKey, "", "", nil
+	}
+	return normalizeChannelModelContractWithRegistry(registry, channel, req)
 }
 
 func (s *Service) normalizeChannelModelContract(channel *model.ModelChannel, req ChannelModelRequest) (string, string, string, model.ChannelInterfaceType, error) {

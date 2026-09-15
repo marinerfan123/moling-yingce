@@ -365,6 +365,32 @@ func TestSaveAdminChannelModelRejectsActiveDuplicateKey(t *testing.T) {
 	}
 }
 
+func TestSaveAdminChannelModelAllowsDisabledUnconfiguredModel(t *testing.T) {
+	svc, db := newChannelModelTestService(t)
+	admin := &model.User{ID: "admin", Role: model.UserRoleAdmin}
+	channel := model.ModelChannel{ID: "channel-1", UserID: admin.ID, Scope: model.ChannelScopeSystem, Enabled: true, Name: "Test", BaseURL: "https://example.com/v1", APIKey: "key", APIFormat: "openai", ModelsJSON: `[]`}
+	if err := db.Create(&channel).Error; err != nil {
+		t.Fatal(err)
+	}
+	enabled := false
+	item, err := svc.SaveAdminChannelModel(admin, channel.ID, "", ChannelModelRequest{
+		ModelKey: "catalog-only-model",
+		Enabled:  &enabled,
+	})
+	if err != nil {
+		t.Fatalf("SaveAdminChannelModel() error = %#v", err)
+	}
+	if item.Capability != "" || item.Protocol != "" || item.Enabled {
+		t.Fatalf("saved unconfigured model = %#v", item)
+	}
+	active := true
+	_, err = svc.SaveAdminChannelModel(admin, channel.ID, "", ChannelModelRequest{ModelKey: "active-unconfigured-model", Enabled: &active})
+	var authErr *AuthError
+	if !errors.As(err, &authErr) || authErr.Message != "请选择模型能力" {
+		t.Fatalf("active unconfigured model error = %#v", err)
+	}
+}
+
 func TestDeleteAdminChannelModelsDeletesSelectionAtomically(t *testing.T) {
 	svc, db := newChannelModelTestService(t)
 	admin := &model.User{ID: "admin", Role: model.UserRoleAdmin}
