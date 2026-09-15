@@ -12,7 +12,9 @@ import {
   type AuthSessionStore,
 } from "./auth/session.js";
 import { isRawBodyWebhookPath, readBoundedRawBody } from "./platform/http-boundary.js";
+import { ProjectsController } from "./projects/projects.controller.js";
 import type { ProviderWebhookController } from "./providers/provider-webhook.controller.js";
+import { TemplatesController } from "./templates/templates.controller.js";
 
 export type AuthSessionIssuer = (authorizationHeader: string) => Promise<AuthSessionIdentity>;
 
@@ -23,6 +25,9 @@ export type ApiProductionDependencies = Readonly<{
   kmsResolver?: object;
   authSessionStore?: AuthSessionStore;
   authSessionIssuer?: AuthSessionIssuer;
+  projectsController?: ProjectsController;
+  templatesController?: TemplatesController;
+  runtimeProfile?: "reference" | "full";
 }>;
 export function assertApiProductionDependencies(
   dependencies: ApiProductionDependencies,
@@ -38,7 +43,10 @@ export function assertApiProductionDependencies(
 
 export function startApiServer(port = Number(process.env["PORT"] ?? 3001), options: ApiProductionDependencies = {}) {
   if (process.env["NODE_ENV"] === "production") assertApiProductionDependencies(options);
-  const controller = new HealthController(process.env["RELEASE_SHA"] ?? "local-dev");
+  const controller = new HealthController(
+    process.env["RELEASE_SHA"] ?? "local-dev",
+    options.runtimeProfile === "reference" ? () => "not_ready" : () => "ready",
+  );
   const authSessionStore = options.authSessionStore ?? new InMemoryAuthSessionStore();
   const authSessionIssuer = options.authSessionIssuer ?? createEnvironmentAuthSessionIssuer();
   if (process.env["NODE_ENV"] === "production" && !authSessionIssuer) throw new Error("AUTH_SESSION_ISSUER_REQUIRED");
@@ -53,6 +61,46 @@ export function startApiServer(port = Number(process.env["PORT"] ?? 3001), optio
       if (sessionId) authSessionStore.revoke(sessionId);
       res.setHeader("set-cookie", clearSessionCookieHeader({ secure: isSecureRequest(req) }));
       sendJson(res, 200, { ok: true });
+      return;
+    }
+    if (path === "/v1/templates" && req.method === "GET" && options.templatesController) {
+      sendJson(res, 200, { templates: options.templatesController.list() });
+      return;
+    }
+    if (path === "/v1/projects" && options.projectsController) {
+      const identity = readSessionIdentity(req, authSessionStore);
+      if (!identity) {
+        sendJson(res, 401, { error: "AUTHENTICATION_REQUIRED" });
+        return;
+      }
+      const principal = { tenantId: "reference-tenant", userId: identity.subject };
+      if (req.method === "GET") {
+        sendJson(res, 200, { projects: options.projectsController.listForUser(principal) });
+        return;
+      }
+      if (req.method === "POST") {
+        try {
+          const input = JSON.parse(new TextDecoder().decode(await readBoundedRawBody(req))) as {
+            title?: unknown;
+            firstEpisodeTitle?: unknown;
+          };
+          if (typeof input.title !== "string" || !input.title.trim()) throw new Error("PROJECT_TITLE_REQUIRED");
+          const firstEpisodeTitle =
+            typeof input.firstEpisodeTitle === "string" && input.firstEpisodeTitle.trim()
+              ? input.firstEpisodeTitle
+              : undefined;
+          sendJson(res, 201, {
+            project: options.projectsController.create(principal, {
+              title: input.title,
+              ...(firstEpisodeTitle ? { firstEpisodeTitle } : {}),
+            }),
+          });
+        } catch (error) {
+          sendJson(res, 400, { error: error instanceof Error ? error.message : "PROJECT_BODY_INVALID" });
+        }
+        return;
+      }
+      sendJson(res, 405, { error: "METHOD_NOT_ALLOWED" });
       return;
     }
     if (req.url === "/health") {
@@ -146,5 +194,13 @@ function sendJson(
 }
 
 if (process.env["COMIC_CANVAS_BOOT"] === "api") {
-  startApiServer();
+  if (process.env["NODE_ENV"] === "production") {
+    const { createProductionApiDependencies } = await import("./production-bootstrap.js");
+    startApiServer(undefined, createProductionApiDependencies());
+  } else startApiServer();
+}
+
+function readSessionIdentity(req: IncomingMessage, store: AuthSessionStore): AuthSessionIdentity | null {
+  const sessionId = readSessionCookie(req.headers.cookie);
+  return sessionId ? store.read(sessionId) : null;
 }

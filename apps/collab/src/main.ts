@@ -1,8 +1,10 @@
 import { startCollabHealthServer } from "./health.js";
+import { createProductionCollabDependencies } from "./production-bootstrap.js";
 import { RoomCoordinator } from "./room-coordinator.js";
 
 export function startCollabServer() {
-  return startCollabHealthServer();
+  const production = process.env["NODE_ENV"] === "production" ? createProductionCollabDependencies() : undefined;
+  return startCollabHealthServer(undefined, undefined, production ? "not_ready" : "ready");
 }
 
 export const collabRuntimeCapabilities = Object.freeze({

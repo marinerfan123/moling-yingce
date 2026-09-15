@@ -18,6 +18,7 @@ export type GenerationWorkerProductionDependencies = Readonly<{
   adapter?: ModelProviderAdapter;
   consumer?: { start(processor: JobProcessor): Promise<void> | void };
   attempts?: AttemptRepository;
+  referenceOnly?: boolean;
 }>;
 export function assertGenerationWorkerProductionDependencies(
   dependencies: GenerationWorkerProductionDependencies,
@@ -54,9 +55,10 @@ export function startGenerationWorker(dependencies: GenerationWorkerProductionDe
     const runtime = composeGenerationWorkerRuntime(dependencies);
     void runtime.consumer.start(runtime.processor);
   }
+  const readiness = dependencies.referenceOnly ? "not_ready" : "ready";
   return createServer((_req, res) => {
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify(buildGenerationHealth()));
+    res.end(JSON.stringify(buildGenerationHealth(readiness)));
   }).listen(Number(process.env["HEALTH_PORT"] ?? 3104), "127.0.0.1");
 }
 
@@ -79,5 +81,8 @@ export function createJobProcessor(options: ConstructorParameters<typeof JobProc
 }
 
 if (process.env["COMIC_CANVAS_BOOT"] === "worker-generation") {
-  startGenerationWorker();
+  if (process.env["NODE_ENV"] === "production") {
+    const { createProductionGenerationDependencies } = await import("./production-bootstrap.js");
+    startGenerationWorker(createProductionGenerationDependencies());
+  } else startGenerationWorker();
 }

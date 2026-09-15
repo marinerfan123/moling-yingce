@@ -4,3 +4,4 @@ export function bootstrapCollab() {
 }
 
 export { buildCollabHealth, startCollabHealthServer } from "./health.js";
+export { createProductionCollabDependencies } from "./production-bootstrap.js";

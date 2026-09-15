@@ -1,0 +1,17 @@
+FROM node:24.6.0-alpine AS build
+
+WORKDIR /app
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm build
+
+FROM node:24.6.0-alpine AS runtime
+
+WORKDIR /app
+ENV NODE_ENV=production RELEASE_SHA=container-build
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/apps ./apps
+COPY --from=build /app/packages ./packages
+USER 10002:10002

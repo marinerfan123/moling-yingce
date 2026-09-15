@@ -1,7 +1,9 @@
 FROM node:24.6.0-alpine AS runtime
 LABEL org.opencontainers.image.source="comic-canvas" org.opencontainers.image.revision="${RELEASE_SHA}"
 WORKDIR /app
-ENV NODE_ENV=production COMIC_CANVAS_BOOT=web
-COPY apps/web/dist ./apps/web/dist
+ENV NODE_ENV=production PORT=3000 RELEASE_SHA=unknown
+COPY apps/web/dist ./public
+COPY apps/web/server.mjs ./server.mjs
 USER 10001:10001
-ENTRYPOINT ["node", "apps/web/dist/main.js"]
+HEALTHCHECK --interval=10s --timeout=3s CMD ["node", "-e", "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+ENTRYPOINT ["node", "server.mjs"]

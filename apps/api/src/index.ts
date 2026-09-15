@@ -11,3 +11,4 @@ export {
 export type { AuthSessionIdentity, AuthSessionStore } from "./auth/session.js";
 export { createEnvironmentAuthSessionIssuer, createOidcSessionIssuer } from "./auth/oidc-session-issuer.js";
 export type { OidcSessionIssuerOptions } from "./auth/oidc-session-issuer.js";
+export { createProductionApiDependencies } from "./production-bootstrap.js";

@@ -1,0 +1,109 @@
+name: comic-canvas-tv
+
+services:
+  postgres:
+    container_name: comic-canvas-tv-postgres
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-open_ai_canvas}
+      POSTGRES_USER: ${POSTGRES_USER:-open_ai_canvas}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - comic-canvas-tv-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    container_name: comic-canvas-tv-redis
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - comic-canvas-tv-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  migrate:
+    container_name: comic-canvas-tv-migrate
+    image: comic-canvas-tv-backend:production
+    build:
+      context: ../..
+      dockerfile: infra/docker/production-backend.Dockerfile
+      args:
+        GOPROXY: ${GOPROXY:-https://goproxy.cn,direct}
+    command: ["migrate-schema", "up"]
+    environment:
+      CANVAS_BACKEND_DATA_DIR: /data
+      CANVAS_DATABASE_DRIVER: postgres
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+    volumes:
+      - comic-canvas-tv-backend:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  backend:
+    container_name: comic-canvas-tv-backend
+    image: comic-canvas-tv-backend:production
+    build:
+      context: ../..
+      dockerfile: infra/docker/production-backend.Dockerfile
+      args:
+        GOPROXY: ${GOPROXY:-https://goproxy.cn,direct}
+    environment:
+      CANVAS_BACKEND_ADDR: ":8080"
+      CANVAS_BACKEND_DATA_DIR: /data
+      CANVAS_AUTO_MIGRATE: "false"
+      CANVAS_SHUTDOWN_TIMEOUT: ${CANVAS_SHUTDOWN_TIMEOUT:-10m}
+      CANVAS_DATABASE_DRIVER: postgres
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CANVAS_WORKER_CONCURRENCY: ${CANVAS_WORKER_CONCURRENCY:-3}
+      CANVAS_CHANNEL_CONCURRENCY: ${CANVAS_CHANNEL_CONCURRENCY:-3}
+      CANVAS_REGISTRATION_ENABLED: ${CANVAS_REGISTRATION_ENABLED:-false}
+      CANVAS_ALLOW_PRIVATE_UPSTREAMS: ${CANVAS_ALLOW_PRIVATE_UPSTREAMS:-false}
+      CANVAS_ALLOWED_PRIVATE_UPSTREAM_HOSTS: ${CANVAS_ALLOWED_PRIVATE_UPSTREAM_HOSTS:-}
+      CANVAS_CORS_ORIGINS: ${CANVAS_CORS_ORIGINS:-https://tv.moling.fun}
+      ENABLE_PROVIDER_PLUGINS: ${ENABLE_PROVIDER_PLUGINS:-false}
+      CANVAS_WHISPER_BASE_URL: ${CANVAS_WHISPER_BASE_URL:-}
+      CANVAS_FFMPEG_PATH: ${CANVAS_FFMPEG_PATH:-}
+      GIN_MODE: release
+    volumes:
+      - comic-canvas-tv-backend:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    stop_grace_period: ${CANVAS_SHUTDOWN_TIMEOUT:-10m}
+
+  web:
+    container_name: comic-canvas-tv-web
+    image: comic-canvas-tv-web:production
+    build:
+      context: ../..
+      dockerfile: infra/docker/production-web.Dockerfile
+      args:
+        VITE_TLDRAW_LICENSE_KEY: ${VITE_TLDRAW_LICENSE_KEY:-}
+        BUILD_VERSION: ${BUILD_VERSION:-}
+    ports:
+      - "127.0.0.1:3300:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  comic-canvas-tv-backend: {}
+  comic-canvas-tv-postgres: {}
+  comic-canvas-tv-redis: {}

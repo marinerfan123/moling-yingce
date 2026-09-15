@@ -249,6 +249,9 @@ importers:
 
   apps/worker-media:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: 3.864.0
+        version: 3.864.0
       '@comic-canvas/config':
         specifier: workspace:*
         version: link:../../packages/config

@@ -17,6 +17,7 @@ export type MediaWorkerProductionDependencies = Readonly<{
   receipts?: ProviderOutputIngestReceiptStore;
   quarantineSink?: SafeFetchQuarantineSink;
   consumer?: { start(): Promise<void> | void };
+  referenceOnly?: boolean;
 }>;
 
 export function assertMediaWorkerProductionDependencies(
@@ -43,9 +44,10 @@ export function startMediaWorker(dependencies: MediaWorkerProductionDependencies
     assertMediaWorkerProductionDependencies(dependencies);
     void dependencies.consumer.start();
   }
+  const readiness = dependencies.referenceOnly ? "not_ready" : "ready";
   return createServer((_req, res) => {
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify(buildMediaHealth()));
+    res.end(JSON.stringify(buildMediaHealth(readiness)));
   }).listen(Number(process.env["HEALTH_PORT"] ?? 3105), "127.0.0.1");
 }
 
@@ -59,4 +61,11 @@ export function buildMediaHealth(readiness: "ready" | "not_ready" = "ready") {
     ffmpeg: "7.1.1",
     clamav: "signed-test-snapshot",
   };
+}
+
+if (process.env["COMIC_CANVAS_BOOT"] === "worker-media") {
+  if (process.env["NODE_ENV"] === "production") {
+    const { createProductionMediaDependencies } = await import("./production-bootstrap.js");
+    startMediaWorker(createProductionMediaDependencies());
+  } else startMediaWorker();
 }

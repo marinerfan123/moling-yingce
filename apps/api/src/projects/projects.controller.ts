@@ -10,4 +10,8 @@ export class ProjectsController {
   list(principal: Principal) {
     return this.projects.listProjects(principal);
   }
+
+  listForUser(principal: Omit<Principal, "memberships">) {
+    return this.projects.listProjectsForUser(principal);
+  }
 }

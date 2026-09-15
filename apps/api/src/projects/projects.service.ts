@@ -97,6 +97,12 @@ export class ProjectsService {
     );
   }
 
+  listProjectsForUser(principal: Omit<Principal, "memberships">) {
+    return [...this.#projects.values()].filter(
+      (project) => project.tenantId === principal.tenantId && project.ownerUserId === principal.userId,
+    );
+  }
+
   assertProjectAccess(principal: Principal, projectId: string, minimum: "view" | "edit" | "admin" = "view") {
     const project = this.#projects.get(projectId);
     if (!project || project.tenantId !== principal.tenantId) throw new Error("PROJECT_NOT_FOUND");
