@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v1.2.10
+
+- 修复导入停用且尚未配置能力的系统渠道模型时被错误拒绝的问题；启用模型和已有模型仍保持完整能力校验。
+
 ## v1.2.9
 
 - 发布正式版本 `v1.2.9`，提供 `ghcr.io/ddcat-ai/open-ai-canvas-web:1.2.9` 与 `ghcr.io/ddcat-ai/open-ai-canvas-backend:1.2.9` 的 Linux amd64/arm64 镜像，并更新 `latest` 镜像。
