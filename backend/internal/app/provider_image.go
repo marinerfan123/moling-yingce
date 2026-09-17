@@ -427,7 +427,9 @@ func volcengineArkImageBody(input canvasGenerationInput) (map[string]interface{}
 		"model":           input.Config.Model,
 		"prompt":          withSystemPrompt(input.Config, input.Prompt),
 		"n":               1,
-		"response_format": "b64_json",
+		// Ark returns a temporary URL that the backend downloads and persists,
+		// avoiding large Base64 responses while retaining Base64 response compatibility.
+		"response_format": "url",
 		"watermark":       false,
 	}
 	if key, value := imageSizeParameter(input.ImageCapability, input.Config.Size); value != "" {
